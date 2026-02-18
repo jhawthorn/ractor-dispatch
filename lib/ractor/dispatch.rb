@@ -1,10 +1,11 @@
 # frozen_string_literal: true
 
 require_relative "dispatch/version"
+require_relative "dispatch/future"
+require_relative "dispatch/executor"
 
-module Ractor
+class Ractor
   module Dispatch
     class Error < StandardError; end
-    # Your code goes here...
   end
 end
