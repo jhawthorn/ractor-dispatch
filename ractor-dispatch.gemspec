@@ -8,13 +8,11 @@ Gem::Specification.new do |spec|
   spec.authors = ["John Hawthorn"]
   spec.email = ["john@hawthorn.email"]
 
-  spec.summary = "TODO: Write a short summary, because RubyGems requires one."
-  spec.description = "TODO: Write a longer description or delete this line."
+  spec.summary = "Dispatch work to a specific Ractor and get results back"
+  spec.description = "A lightweight library for dispatching work to a specific Ractor. Useful as an escape hatch when code running in non-main Ractors needs to execute something only the main Ractor can do."
   spec.homepage = "https://github.com/jhawthorn/ractor-dispatch"
   spec.license = "MIT"
-  spec.required_ruby_version = ">= 3.2.0"
-
-  spec.metadata["allowed_push_host"] = "TODO: Set to your gem server 'https://example.com'"
+  spec.required_ruby_version = ">= 4.0.0.dev"
   spec.metadata["homepage_uri"] = spec.homepage
   spec.metadata["source_code_uri"] = "https://github.com/jhawthorn/ractor-dispatch"
 
