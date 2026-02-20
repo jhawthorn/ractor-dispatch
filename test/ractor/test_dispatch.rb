@@ -56,4 +56,12 @@ class Ractor::TestDispatch < Minitest::Test
     assert_equal [2, 2], r.value
     executor.shutdown
   end
+
+  def test_main
+    r = Ractor.new do
+      Ractor::Dispatch.main.run { Ractor.main? }
+    end
+
+    assert_equal true, r.value
+  end
 end
