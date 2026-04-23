@@ -6,7 +6,14 @@ require_relative "dispatch/executor"
 
 class Ractor
   module Dispatch
-    class Error < StandardError; end
+    class Error < StandardError
+      attr_reader :details
+
+      def initialize(message = nil, details: nil)
+        @details = details
+        super(message)
+      end
+    end
 
     @main = Executor.new
 
