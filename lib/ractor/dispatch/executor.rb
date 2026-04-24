@@ -17,6 +17,8 @@ class Ractor
             rescue Ractor::ClosedError
               # caller went away, discard
             end
+          rescue Ractor::Error => e
+            reply_port << [:error, Ractor::Dispatch::Error.new("Executor encountered a problem", details: serialize_error(e))]
           end
         rescue Ractor::ClosedError
           # port closed via shutdown
@@ -38,6 +40,17 @@ class Ractor
 
       def shutdown
         @port.close
+      end
+
+      private
+
+      def serialize_error(error)
+        {
+          class: error.class,
+          message: error.message&.to_s,
+          backtrace: error.backtrace&.map(&:to_s),
+          cause: error.cause && serialize_error(error.cause)
+        }
       end
     end
   end
