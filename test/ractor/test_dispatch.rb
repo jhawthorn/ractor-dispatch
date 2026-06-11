@@ -19,7 +19,7 @@ class Ractor::TestDispatch < Minitest::Test
       ex.run { 1 + 1 }
     end
 
-    assert_equal 2, r.value
+    assert_equal 2, ractor_value(r)
     executor.shutdown
   end
 
@@ -31,8 +31,21 @@ class Ractor::TestDispatch < Minitest::Test
       future.value
     end
 
-    assert_equal 2, r.value
+    assert_equal 2, ractor_value(r)
     executor.shutdown
+  end
+
+  if RUBY_VERSION < "4"
+    def test_ruby_3_submit_runs_inline
+      executor = Ractor::Dispatch::Executor.new
+
+      future = executor.submit { 42 }
+
+      # No-op executor: the block runs inline, so the future is already resolved.
+      assert future.resolved?
+      assert_equal 42, future.value
+      executor.shutdown
+    end
   end
 
   def test_error_propagation
@@ -44,7 +57,7 @@ class Ractor::TestDispatch < Minitest::Test
       e
     end
 
-    e = r.value
+    e = ractor_value(r)
     assert_kind_of RuntimeError, e
     assert_equal "oops", e.message
     executor.shutdown
@@ -58,42 +71,56 @@ class Ractor::TestDispatch < Minitest::Test
       [future.value, future.value]
     end
 
-    assert_equal [2, 2], r.value
+    assert_equal [2, 2], ractor_value(r)
     executor.shutdown
   end
 
-  def test_unshareable_error_propagation
-    executor = Ractor::Dispatch::Executor.new
-    port = Ractor::Port.new
+  if RUBY_VERSION >= "4"
+    def test_unshareable_error_propagation
+      executor = Ractor::Dispatch::Executor.new
+      port = Ractor::Port.new
 
-    r = Ractor.new(executor, port) do |ex, port|
-      ex.run do
-        raise UnshareableError, "oops"
+      r = Ractor.new(executor, port) do |ex, port|
+        ex.run do
+          raise UnshareableError, "oops"
+        rescue => e
+          port << e.backtrace.map(&:to_s)
+          raise
+        end
       rescue => e
-        port << e.backtrace.map(&:to_s)
-        raise
+        e
       end
-    rescue => e
-      e
+
+      expected_backtrace = port.receive
+
+      e = ractor_value(r)
+      assert_kind_of Ractor::Dispatch::Error, e
+      assert_equal Ractor::Error, e.details[:class]
+      assert_equal "can not copy Monitor object.", e.details[:message]
+      assert_equal UnshareableError, e.details[:cause][:class]
+      assert_equal "oops", e.details[:cause][:message]
+      assert_equal expected_backtrace, e.details[:cause][:backtrace]
+      executor.shutdown
     end
-
-    expected_backtrace = port.receive
-
-    e = r.value
-    assert_kind_of Ractor::Dispatch::Error, e
-    assert_equal Ractor::Error, e.details[:class]
-    assert_equal "can not copy Monitor object.", e.details[:message]
-    assert_equal UnshareableError, e.details[:cause][:class]
-    assert_equal "oops", e.details[:cause][:message]
-    assert_equal expected_backtrace, e.details[:cause][:backtrace]
-    executor.shutdown
   end
 
-  def test_main
-    r = Ractor.new do
-      Ractor::Dispatch.main.run { Ractor.main? }
-    end
+  if RUBY_VERSION >= "4"
+    def test_main
+      r = Ractor.new do
+        Ractor::Dispatch.main.run { Ractor.main? }
+      end
 
-    assert_equal true, r.value
+      assert_equal true, ractor_value(r)
+    end
+  end
+
+  private
+
+  def ractor_value(ractor)
+    if RUBY_VERSION >= "4"
+      ractor.value
+    else
+      ractor.take
+    end
   end
 end

@@ -3,9 +3,14 @@
 class Ractor
   module Dispatch
     class Future
-      def initialize(port)
+      def initialize(port, resolved: false, value: nil, error: nil)
         @port = port
         @mutex = Mutex.new
+        if resolved
+          @resolved = true
+          @value = value
+          @error = error
+        end
       end
 
       def value

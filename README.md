@@ -74,7 +74,9 @@ reply ports naturally route results back to the correct caller.
 
 ## Requirements
 
-Requires Ruby with `Ractor::Port` support (Ruby 4.0+).
+Requires Ruby 3.3.1+.
+
+On Ruby 4.0+, Ractor::Dispatch dispatches work to the target Ractor. On Ruby 3.x, where `Ractor::Port` is not available, the executor is a no-op: the block will run inline in the caller.
 
 ## Development
 
