@@ -12,7 +12,7 @@ Gem::Specification.new do |spec|
   spec.description = "A lightweight library for dispatching work to a specific Ractor. Useful as an escape hatch when code running in non-main Ractors needs to execute something only the main Ractor can do."
   spec.homepage = "https://github.com/jhawthorn/ractor-dispatch"
   spec.license = "MIT"
-  spec.required_ruby_version = ">= 4.0.0.dev"
+  spec.required_ruby_version = ">= 3.3"
   spec.metadata["homepage_uri"] = spec.homepage
   spec.metadata["source_code_uri"] = "https://github.com/jhawthorn/ractor-dispatch"
 

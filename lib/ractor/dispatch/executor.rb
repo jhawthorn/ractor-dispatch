@@ -2,9 +2,16 @@
 
 class Ractor
   module Dispatch
+    class Unsupported < StandardError; end
+
     class Executor
       def initialize
-        @port = Ractor::Port.new
+        @port =
+          begin
+            Ractor::Port.new
+          rescue NameError
+            raise Unsupported, "Ractor-dispatch requires Ractor::Port (Ruby 4.0+)"
+          end
 
         Thread.new do
           loop do

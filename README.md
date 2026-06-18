@@ -76,6 +76,8 @@ reply ports naturally route results back to the correct caller.
 
 Requires Ruby with `Ractor::Port` support (Ruby 4.0+).
 
+It installs and can be required on Ruby 3.3+, but attempting to use the library will raise.
+
 ## Development
 
 After checking out the repo, run `bin/setup` to install dependencies. Then, run `rake test` to run the tests. You can also run `bin/console` for an interactive prompt that will allow you to experiment.
