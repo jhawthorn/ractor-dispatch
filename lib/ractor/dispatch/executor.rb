@@ -11,14 +11,14 @@ class Ractor
             callable, reply_port = @port.receive
             begin
               result = callable.call
-              reply_port << [:ok, result]
+              reply_port << [:ok, result].freeze
             rescue => e
-              reply_port << [:error, e]
+              reply_port << [:error, e].freeze
             rescue Ractor::ClosedError
               # caller went away, discard
             end
           rescue Ractor::Error => e
-            reply_port << [:error, Ractor::Dispatch::Error.new("Executor encountered a problem", details: serialize_error(e))]
+            reply_port << [:error, Ractor::Dispatch::Error.new("Executor encountered a problem", details: serialize_error(e))].freeze
           end
         rescue Ractor::ClosedError
           # port closed via shutdown
@@ -30,7 +30,7 @@ class Ractor
       def submit(&block)
         callable = Ractor.shareable_proc(&block)
         reply_port = Ractor::Port.new
-        @port << [callable, reply_port]
+        @port << [callable, reply_port].freeze
         Future.new(reply_port)
       end
 

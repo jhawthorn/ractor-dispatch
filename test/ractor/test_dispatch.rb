@@ -89,6 +89,25 @@ class Ractor::TestDispatch < Minitest::Test
     executor.shutdown
   end
 
+  def test_port_payloads_are_shareable
+    executor = Ractor::Dispatch::Executor.new
+    gate = Ractor::Port.new
+
+    # The executor runs at most one job at a time, so parking two jobs on the
+    # gate guarantees at least one request envelope is still queued in the
+    # executor's port for us to receive and inspect.
+    2.times { executor.submit { gate.receive } }
+    request = executor.instance_variable_get(:@port).receive
+    assert Ractor.shareable?(request), "expected request envelope to be shareable"
+    gate << :done
+
+    reply = executor.submit { 1 + 1 }.instance_variable_get(:@port).receive
+    assert Ractor.shareable?(reply), "expected reply envelope to be shareable"
+    assert_equal [:ok, 2], reply
+
+    executor.shutdown
+  end
+
   def test_main
     r = Ractor.new do
       Ractor::Dispatch.main.run { Ractor.main? }
