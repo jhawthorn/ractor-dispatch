@@ -17,8 +17,26 @@ class Ractor
 
     @main = Executor.new
 
-    def self.main
-      @main
+    class << self
+      def main
+        @main
+      end
+
+      def reset_main! # :nodoc:
+        @main.shutdown
+        @main = Executor.new
+      end
     end
+
+    module ForkSafety # :nodoc:
+      def _fork
+        pid = super
+        Ractor::Dispatch.reset_main! if pid == 0
+        pid
+      end
+    end
+    private_constant :ForkSafety
+
+    Process.singleton_class.prepend(ForkSafety) if Process.respond_to?(:_fork)
   end
 end

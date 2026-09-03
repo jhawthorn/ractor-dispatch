@@ -96,4 +96,30 @@ class Ractor::TestDispatch < Minitest::Test
 
     assert_equal true, r.value
   end
+
+  def test_main_executor_is_replaced_after_fork
+    read, write = IO.pipe
+
+    pid = fork do
+      read.close
+      result = Ractor.new do
+        Ractor::Dispatch.main.run { 1 + 1 }
+      end.value
+      Marshal.dump(result, write)
+      exit!(0)
+    end
+
+    write.close
+    assert read.wait_readable(10), "forked child did not dispatch to the main executor"
+    assert_equal 2, Marshal.load(read)
+    assert_equal 2, Ractor::Dispatch.main.run { 1 + 1 } # parent executor unaffected
+  ensure
+    if pid
+      begin
+        Process.kill(:KILL, pid)
+      rescue Errno::ESRCH
+      end
+      Process.waitpid(pid)
+    end
+  end
 end
